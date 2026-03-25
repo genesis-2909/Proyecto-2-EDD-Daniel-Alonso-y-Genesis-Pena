@@ -3,10 +3,14 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
 package proyecto.pkg2;
+import javax.swing.JOptionPane;
+import Clases.RegistroImpresion;
+import Clases.VisualizadorArbol;
+import EDD.MonticuloBinario;
 
 /**
  *
- * @author Daniel Alonso
+ * @author Daniel Alonso y Génesis Peña
  */
 public class VentanaPrincipal extends javax.swing.JFrame {
     
@@ -43,6 +47,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         btnEnviar = new javax.swing.JButton();
         chkPrioridad = new javax.swing.JCheckBox();
         btnLiberar = new javax.swing.JButton();
+        btnGraficar = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -91,20 +96,39 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         getContentPane().add(lblReloj, new org.netbeans.lib.awtextra.AbsoluteConstraints(670, 10, -1, -1));
 
         btnEnviar.setText("Enviar a Impresión");
+        btnEnviar.addActionListener(this::btnEnviarActionPerformed);
         getContentPane().add(btnEnviar, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 270, -1, -1));
 
         chkPrioridad.setText("¿Prioritario?");
+        chkPrioridad.addActionListener(this::chkPrioridadActionPerformed);
         getContentPane().add(chkPrioridad, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 310, -1, -1));
 
         btnLiberar.setText("Liberar Impresora");
         btnLiberar.addActionListener(this::btnLiberarActionPerformed);
         getContentPane().add(btnLiberar, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 340, -1, -1));
 
+        btnGraficar.setText("Representación Gráfica");
+        btnGraficar.addActionListener(this::btnGraficarActionPerformed);
+        getContentPane().add(btnGraficar, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 380, -1, -1));
+
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnLiberarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLiberarActionPerformed
-        // TODO add your handling code here:
+    // Extraemos el de mayor prioridad del montículo
+    Object extraido = sistema.getColaImpresion().eliminarMin();
+    
+    if (extraido != null) {
+        Clases.RegistroImpresion registro = (Clases.RegistroImpresion) extraido;
+        
+        String info = "--- DOCUMENTO IMPRESO ---\n" +
+                      "Archivo: " + registro.getNombreDocumento() + "\n" +
+                      "Etiqueta de prioridad: " + registro.getEtiqueta();
+        
+        JOptionPane.showMessageDialog(this, info, "Impresora Liberada", JOptionPane.INFORMATION_MESSAGE);
+    } else {
+        JOptionPane.showMessageDialog(this, "La cola está vacía.", "Aviso", JOptionPane.WARNING_MESSAGE);
+}
     }//GEN-LAST:event_btnLiberarActionPerformed
 
     private void btnCargarCSVActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCargarCSVActionPerformed
@@ -116,6 +140,68 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         
         javax.swing.JOptionPane.showMessageDialog(this, "¡Usuarios cargados correctamente!");
     }//GEN-LAST:event_btnCargarCSVActionPerformed
+
+    private void btnEnviarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEnviarActionPerformed
+// 1. Obtener el nombre del usuario seleccionado en el ComboBox
+        String nombreUsuario = (String) cbUsuarios.getSelectedItem();
+        
+        if (nombreUsuario == null || nombreUsuario.equals("Seleccione un usuario...")) {
+            JOptionPane.showMessageDialog(this, "Por favor seleccione un usuario de la lista.");
+            return;
+        }
+
+        // 2. Pedir datos del documento mediante ventanitas
+        String nombreDoc = JOptionPane.showInputDialog(this, "Nombre del documento:");
+        if (nombreDoc == null || nombreDoc.trim().isEmpty()) return; // Si cancela, no hace nada
+
+        String paginasStr = JOptionPane.showInputDialog(this, "Cantidad de páginas:");
+        if (paginasStr == null) return;
+
+        try {
+            int pags = Integer.parseInt(paginasStr);
+            
+            // 3. Buscar al objeto Usuario real en la Tabla Hash
+            Clases.Usuario usuarioObjeto = this.sistema.buscarUsuario(nombreUsuario);
+            
+            if (usuarioObjeto != null) {
+                // 4. Crear el objeto Documento
+                Clases.Documento nuevoDoc = new Clases.Documento(nombreDoc, pags, "PDF");
+                
+                // 5. Ver si marcaron el checkbox de prioridad
+                boolean esPrioritario = chkPrioridad.isSelected();
+                
+                this.sistema.enviarAImprimir(nuevoDoc, usuarioObjeto, esPrioritario);
+                
+                JOptionPane.showMessageDialog(this, "¡Documento '" + nombreDoc + "' enviado a la cola de impresión!");
+            } else {
+                JOptionPane.showMessageDialog(this, "Error: Usuario no encontrado en el sistema.");
+            }
+
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Error: El número de páginas debe ser un número entero.");
+        }
+    }//GEN-LAST:event_btnEnviarActionPerformed
+
+    private void chkPrioridadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkPrioridadActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_chkPrioridadActionPerformed
+
+    private void btnGraficarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGraficarActionPerformed
+// 1. Obtenemos el montículo del paquete EDD
+    EDD.MonticuloBinario monticulo = sistema.getColaImpresion();
+    
+    // 2. Usamos la ruta completa Clases.RegistroImpresion para el arreglo
+Clases.RegistroImpresion[] datos = (Clases.RegistroImpresion[]) monticulo.getArreglo();
+    int cantidad = monticulo.getSize(); 
+
+    if (cantidad > 0) {
+        // 3. Llamamos al visualizador que creaste en el paquete Clases
+        Clases.VisualizadorArbol visualizador = new Clases.VisualizadorArbol();
+        visualizador.mostrar(datos, cantidad);
+    } else {
+        javax.swing.JOptionPane.showMessageDialog(this, "No hay nada que graficar, la cola está vacía.");
+    }
+    }//GEN-LAST:event_btnGraficarActionPerformed
 
     /**
      * @param args the command line arguments
@@ -160,6 +246,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCargarCSV;
     private javax.swing.JButton btnEnviar;
+    private javax.swing.JButton btnGraficar;
     private javax.swing.JButton btnLiberar;
     private javax.swing.JComboBox<String> cbUsuarios;
     private javax.swing.JCheckBox chkPrioridad;

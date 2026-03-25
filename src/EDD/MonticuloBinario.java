@@ -4,6 +4,9 @@
  */
 package EDD;
 import Clases.RegistroImpresion;
+    import org.graphstream.graph.*;
+    import org.graphstream.graph.implementations.*;
+    import org.graphstream.ui.view.Viewer;
 /**
  *Aqui se implementa un Monticulo Binario (Min-Heap) usando un arreglo y
  * no se utiliza punteros para mantener la estructura de arbol
@@ -113,4 +116,42 @@ public void eliminarDocumentoEspecifico(int etiquetaBuscada) {
     }
 }
 
+/**
+ * Representa de manera grafica el monticulo binario
+ */
+public class VisualizadorArbol {
+    private Graph graph;
+
+    public void mostrar(Object[] array, int size) {
+        graph = new SingleGraph("Monticulo Binario");
+        
+        // Estilo básico para que los nodos sean círculos con texto
+        graph.setAttribute("ui.stylesheet", "node { fill-color: #3498db; size: 30px; text-alignment: center; text-size: 15px; text-color: white; }");
+
+        for (int i = 0; i < size; i++) {
+            Clases.RegistroImpresion reg = (Clases.RegistroImpresion) array[i];
+            String id = String.valueOf(i);
+            Node n = graph.addNode(id);
+            // Mostramos el nombre del doc y su prioridad en el círculo
+            n.setAttribute("ui.label", reg.getNombreDocumento() + " (" + reg.getEtiqueta() + ")");
+            
+            if (i > 0) {
+                int padre = (i - 1) / 2; // Lógica de índices del Montículo
+                graph.addEdge(padre + "-" + i, String.valueOf(padre), id);
+            }
+        }
+
+        Viewer viewer = graph.display();
+        viewer.disableAutoLayout(); // Mantiene la forma de árbol
+    }
+}
+    // Método para obtener el arreglo interno (el vector)
+    public Object[] getArreglo() {
+        return this.heap; // O como se llame tu arreglo interno
+    }
+
+    // Método para obtener la cantidad actual de elementos
+    public int getSize() {
+        return this.n; // O como se llame tu variable de contador
+    }
 }

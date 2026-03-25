@@ -1,1 +1,2 @@
 # Proyecto-2-EDD-Daniel-Alonso-y-Genesis-Pena
+El código simula un sistema de gestión de impresión utilizando un Montículo Binario para administrar prioridades de documentos y una Tabla de Dispersión para el acceso eficiente a los datos del usuario. La aplicación permite cargar usuarios desde archivos CSV y visualizar la cola de impresión tanto en lista como en estructura de árbol mediante interfaz.

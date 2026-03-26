@@ -29,16 +29,31 @@ public class MonticuloBinario {
      * Inserta un nuevo registro en la cola de impresion
      * nuevo es el registro con la etiqueta del tiempo
      */
-    public void insertar(RegistroImpresion nuevo) {
-        /** valida la capacidad para evitar errores en el codigo */
-        if (n >= heap.length - 1) {
-            System.out.println("Error, La cola de impresion esta llena ");
-            return;
-        }
-        
-        n++;
-        heap[n] = nuevo;
-        subir(n); /** Restablece el orden del monticulo */
+    public void insertar(RegistroImpresion nuevoNodo) {
+// 1. Usamos 'tamano' sin ñ para evitar errores de codificación
+    if (this.n >= this.heap.length - 1) {
+        return; 
+    }
+
+    // 2. Insertamos
+    this.n++;
+    int actual = this.n;
+    this.heap[actual] = nuevoNodo;
+
+    // 3. Filtrado hacia arriba
+    // Comparamos las etiquetas de tiempo (el que tenga menor tiempo va arriba)
+    while (actual > 1 && heap[actual].getEtiqueta() < heap[padre(actual)].getEtiqueta()) {
+        intercambiar(actual, padre(actual));
+        actual = padre(actual);
+    }
+}
+
+private int padre(int pos) { return pos / 2; }
+
+private void intercambiar(int pos1, int pos2) {
+    RegistroImpresion temp = heap[pos1];
+    heap[pos1] = heap[pos2];
+    heap[pos2] = temp;
     }
 
     /**
@@ -104,7 +119,7 @@ public void eliminarDocumentoEspecifico(int etiquetaBuscada) {
     if (posicion != -1) {
         /**  se le asigna un tiempo menor al de todos */
         /** se crea un registro temporal con prioridad maxima */
-        RegistroImpresion temporal = new RegistroImpresion("ELIMINAR", -999999);
+        RegistroImpresion temporal = new RegistroImpresion("ELIMINAR", "SISTEMA", -999999);
         heap[posicion] = temporal;
 
         /** se le hace subir hasta la raiz */
@@ -142,16 +157,16 @@ public class VisualizadorArbol {
         }
 
         Viewer viewer = graph.display();
-        viewer.disableAutoLayout(); // Mantiene la forma de árbol
+        viewer.disableAutoLayout();
     }
 }
     // Método para obtener el arreglo interno (el vector)
     public Object[] getArreglo() {
-        return this.heap; // O como se llame tu arreglo interno
+        return this.heap;
     }
 
     // Método para obtener la cantidad actual de elementos
     public int getSize() {
-        return this.n; // O como se llame tu variable de contador
+        return this.n;
     }
 }

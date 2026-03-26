@@ -5,54 +5,55 @@
 package Clases;
 
 /**
- * representa un documento dentro de la cola de prioridad
- * @author Daniel y Genesis
+ * Clase que representa un documento enviado a la cola de impresión.
+ * Almacena la información básica del documento, su propietario y su prioridad.
  */
 public class RegistroImpresion {
     private String nombreDocumento;
-    private int etiquetaTiempo; /**  determina la prioridad en el monticulo */
+    private String nombreUsuario;
+    private int etiquetaTiempo;
 
     /**
-     * crea un registro para la cola aplicando la logica de prioridad
-     *  doc - documento que se va a imprimir
-     *  usuario - dueño para poder saber su nivel de prioridad
-     *  tiempoActual - valor actual del reloj del sistema
-     *  esPrioritario - si el usuario decidio enviarlo como prioritario
+     * Constructor de la clase RegistroImpresion.
+     * * @param nombreDocumento El nombre o título del documento a imprimir.
+     * @param nombreUsuario El nombre del usuario dueño del documento.
+     * @param etiquetaTiempo El valor de prioridad o etiqueta de tiempo calculada.
      */
-    public RegistroImpresion(Documento doc, Usuario usuario, int tiempoActual, boolean esPrioritario) {
-        this.nombreDocumento = doc.getNombre();
-        
-        if (esPrioritario) {
-            /** Si es prioritario, restamos tiempo para que el valor sea menor y suba en el Min-Heap*/       
-            this.etiquetaTiempo = calcularPrioridad(usuario, tiempoActual);
-        } else {
-            /** Si no, entra con el tiempo normal del reloj */
-            this.etiquetaTiempo = tiempoActual;
-        }
-    }
-    
-    /**
-     * constructor para la eliminacion, que permite crear un registro
-     * con una etiqueta manual para forzar la subida al inicio
-     */
-    public RegistroImpresion(String nombre, int etiqueta) {
-        this.nombreDocumento = nombre;
-        this.etiquetaTiempo = etiqueta;
+    public RegistroImpresion(String nombreDocumento, String nombreUsuario, int etiquetaTiempo) {
+        this.nombreDocumento = nombreDocumento;
+        this.nombreUsuario = nombreUsuario;
+        this.etiquetaTiempo = etiquetaTiempo;
     }
 
     /**
-     * altera el tiempo segun el tipo de usuario que sea
+     * Obtiene el nombre del documento.
+     * * @return Un String con el nombre del documento.
      */
-    private int calcularPrioridad(Usuario u, int tiempo) {
-        if (u.getTipoPrioridad().equals("prioridad_alta")) {
-            return tiempo - 100; /** Valor arbitrario para que vaya al inicio */
-        } else if (u.getTipoPrioridad().equals("prioridad_media")) {
-            return tiempo - 50;
-        }
-        return tiempo; /** Prioridad baja se queda igual */
+    public String getNombreDocumento() {
+        return nombreDocumento;
     }
-    
-    /** Getters */
-    public int getEtiqueta() { return etiquetaTiempo; }
-    public String getNombreDocumento() { return nombreDocumento; }
+
+    /**
+     * Obtiene el nombre del usuario dueño del documento.
+     * * @return Un String con el nombre del usuario.
+     */
+    public String getNombreUsuario() {
+        return nombreUsuario;
+    }
+
+    /**
+     * Obtiene la etiqueta de tiempo o prioridad del documento.
+     * * @return Un entero que representa la prioridad en la cola.
+     */
+    public int getEtiqueta() {
+        return etiquetaTiempo;
+    }
+
+    /**
+     * Modifica la etiqueta de tiempo (prioridad) del documento.
+     * * @param etiquetaTiempo El nuevo valor de prioridad a asignar.
+     */
+    public void setEtiqueta(int etiquetaTiempo) {
+        this.etiquetaTiempo = etiquetaTiempo;
+    }
 }

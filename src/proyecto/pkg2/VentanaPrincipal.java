@@ -7,6 +7,7 @@ import javax.swing.JOptionPane;
 import Clases.RegistroImpresion;
 import Clases.VisualizadorArbol;
 import EDD.MonticuloBinario;
+import Clases.Usuario;
 
 /**
  *
@@ -17,6 +18,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     public EDD.Tablahash tablaUsuarios = new EDD.Tablahash(50);
     private Clases.Sistema sistema = new Clases.Sistema();
     private int relojSimulacion = 0;
+    public EDD.MonticuloBinario monticulo = new EDD.MonticuloBinario(100);
     
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(VentanaPrincipal.class.getName());
@@ -48,6 +50,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         chkPrioridad = new javax.swing.JCheckBox();
         btnLiberar = new javax.swing.JButton();
         btnGraficar = new javax.swing.JButton();
+        btnEliminarUsuario = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -87,10 +90,10 @@ public class VentanaPrincipal extends javax.swing.JFrame {
 
         btnCargarCSV.setText("Cargar Usuarios");
         btnCargarCSV.addActionListener(this::btnCargarCSVActionPerformed);
-        getContentPane().add(btnCargarCSV, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 190, -1, -1));
+        getContentPane().add(btnCargarCSV, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 140, -1, -1));
 
         cbUsuarios.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        getContentPane().add(cbUsuarios, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 230, -1, -1));
+        getContentPane().add(cbUsuarios, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 190, -1, -1));
 
         lblReloj.setText("Tiempo: 0");
         getContentPane().add(lblReloj, new org.netbeans.lib.awtextra.AbsoluteConstraints(670, 10, -1, -1));
@@ -111,75 +114,100 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         btnGraficar.addActionListener(this::btnGraficarActionPerformed);
         getContentPane().add(btnGraficar, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 380, -1, -1));
 
+        btnEliminarUsuario.setText("Eliminar Usuario Seleccionado");
+        btnEliminarUsuario.addActionListener(this::btnEliminarUsuarioActionPerformed);
+        getContentPane().add(btnEliminarUsuario, new org.netbeans.lib.awtextra.AbsoluteConstraints(-10, 230, -1, -1));
+
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnLiberarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLiberarActionPerformed
-    // Extraemos el de mayor prioridad del montículo
-    Object extraido = sistema.getColaImpresion().eliminarMin();
-    
-    if (extraido != null) {
-        Clases.RegistroImpresion registro = (Clases.RegistroImpresion) extraido;
+    if (monticulo.getSize() > 0) { 
+        // Llamamos a eliminarMin() que ya tienes
+        RegistroImpresion eliminado = monticulo.eliminarMin(); 
         
-        String info = "--- DOCUMENTO IMPRESO ---\n" +
-                      "Archivo: " + registro.getNombreDocumento() + "\n" +
-                      "Etiqueta de prioridad: " + registro.getEtiqueta();
-        
-        JOptionPane.showMessageDialog(this, info, "Impresora Liberada", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(this, "Imprimiendo: " + eliminado.getNombreDocumento() + 
+                                      "\nUsuario: " + eliminado.getNombreUsuario());
     } else {
-        JOptionPane.showMessageDialog(this, "La cola está vacía.", "Aviso", JOptionPane.WARNING_MESSAGE);
-}
+        JOptionPane.showMessageDialog(this, "La cola de impresión está vacía.");
+    }
     }//GEN-LAST:event_btnLiberarActionPerformed
 
     private void btnCargarCSVActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCargarCSVActionPerformed
-        Clases.LectorCSV lector = new Clases.LectorCSV();
+javax.swing.JFileChooser fc = new javax.swing.JFileChooser(); // Requerimiento técnico [cite: 104]
+    int seleccion = fc.showOpenDialog(this);
+    
+    if (seleccion == javax.swing.JFileChooser.APPROVE_OPTION) {
+        java.io.File archivo = fc.getSelectedFile();
+        cbUsuarios.removeAllItems(); // Limpia la lista antes de cargar para evitar duplicados
         
-        lector.cargarUsuarios(this.tablaUsuarios);
-        
-        actualizarComboUsuarios();
-        
-        javax.swing.JOptionPane.showMessageDialog(this, "¡Usuarios cargados correctamente!");
+        try (java.io.BufferedReader br = new java.io.BufferedReader(new java.io.FileReader(archivo))) {
+            String linea;
+            
+            // HEMOS ELIMINADO LA LÍNEA QUE SALTABA EL ENCABEZADO
+            
+            while ((linea = br.readLine()) != null) {
+                String[] datos = linea.split(",");
+                if (datos.length >= 2) {
+                    String nombre = datos[0].trim();
+                    String prioridad = datos[1].trim();
+                    
+                    // Se inserta en la Tabla de Dispersión (Complejidad cercana a O(1)) [cite: 54, 84]
+                    Usuario nuevo = new Usuario(nombre, prioridad);
+                    tablaUsuarios.insertar(nuevo);
+                    
+                    cbUsuarios.addItem(nombre);
+                }
+            }
+            JOptionPane.showMessageDialog(this, "Usuarios cargados exitosamente.");
+            
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error al leer el archivo: " + e.getMessage());
+        }
+    }
     }//GEN-LAST:event_btnCargarCSVActionPerformed
 
     private void btnEnviarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEnviarActionPerformed
-// 1. Obtener el nombre del usuario seleccionado en el ComboBox
-        String nombreUsuario = (String) cbUsuarios.getSelectedItem();
-        
-        if (nombreUsuario == null || nombreUsuario.equals("Seleccione un usuario...")) {
-            JOptionPane.showMessageDialog(this, "Por favor seleccione un usuario de la lista.");
-            return;
-        }
+if (cbUsuarios.getSelectedItem() == null) {
+        JOptionPane.showMessageDialog(this, "Por favor, selecciona un usuario.");
+        return;
+    }
 
-        // 2. Pedir datos del documento mediante ventanitas
+    String nombreUsuario = cbUsuarios.getSelectedItem().toString().trim();
+    // Usamos 'buscar' de tu TablaHash
+    Usuario userMatch = tablaUsuarios.buscarUsuario(nombreUsuario); 
+
+    if (userMatch != null) {
         String nombreDoc = JOptionPane.showInputDialog(this, "Nombre del documento:");
-        if (nombreDoc == null || nombreDoc.trim().isEmpty()) return; // Si cancela, no hace nada
+        String paginasStr = JOptionPane.showInputDialog(this, "Número de páginas:");
 
-        String paginasStr = JOptionPane.showInputDialog(this, "Cantidad de páginas:");
-        if (paginasStr == null) return;
+        if (nombreDoc != null && paginasStr != null) {
+            try {
+                int etiquetaTiempo = relojSimulacion; 
+                if (chkPrioridad.isSelected()) {
+                    // Según tus clases, el atributo es 'prioridad'
+                    if (userMatch.getTipoPrioridad().equalsIgnoreCase("prioridad_alta")) etiquetaTiempo -= 100;
+                    else if (userMatch.getTipoPrioridad().equalsIgnoreCase("prioridad_media")) etiquetaTiempo -= 50;
+                }
 
-        try {
-            int pags = Integer.parseInt(paginasStr);
-            
-            // 3. Buscar al objeto Usuario real en la Tabla Hash
-            Clases.Usuario usuarioObjeto = this.sistema.buscarUsuario(nombreUsuario);
-            
-            if (usuarioObjeto != null) {
-                // 4. Crear el objeto Documento
-                Clases.Documento nuevoDoc = new Clases.Documento(nombreDoc, pags, "PDF");
+                // Creamos el registro con TUS parámetros
+                RegistroImpresion nuevoDoc = new RegistroImpresion(nombreDoc, nombreUsuario, etiquetaTiempo);
                 
-                // 5. Ver si marcaron el checkbox de prioridad
-                boolean esPrioritario = chkPrioridad.isSelected();
+                // Lo insertamos en TU montículo
+                monticulo.insertar(nuevoDoc); 
+
+                relojSimulacion++; 
+                JOptionPane.showMessageDialog(this, "Documento enviado a la cola. Total en cola: " + monticulo.getSize());
                 
-                this.sistema.enviarAImprimir(nuevoDoc, usuarioObjeto, esPrioritario);
-                
-                JOptionPane.showMessageDialog(this, "¡Documento '" + nombreDoc + "' enviado a la cola de impresión!");
-            } else {
-                JOptionPane.showMessageDialog(this, "Error: Usuario no encontrado en el sistema.");
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this, "Error: Las páginas deben ser un número.");
             }
-
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Error: El número de páginas debe ser un número entero.");
         }
+    } else {
+        JOptionPane.showMessageDialog(this, "Error: Usuario no encontrado.");
+    }
+    relojSimulacion++; 
+    lblReloj.setText("Tiempo actual: " + relojSimulacion);
     }//GEN-LAST:event_btnEnviarActionPerformed
 
     private void chkPrioridadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkPrioridadActionPerformed
@@ -187,21 +215,40 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_chkPrioridadActionPerformed
 
     private void btnGraficarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGraficarActionPerformed
-// 1. Obtenemos el montículo del paquete EDD
-    EDD.MonticuloBinario monticulo = sistema.getColaImpresion();
-    
-    // 2. Usamos la ruta completa Clases.RegistroImpresion para el arreglo
-Clases.RegistroImpresion[] datos = (Clases.RegistroImpresion[]) monticulo.getArreglo();
-    int cantidad = monticulo.getSize(); 
-
-    if (cantidad > 0) {
-        // 3. Llamamos al visualizador que creaste en el paquete Clases
-        Clases.VisualizadorArbol visualizador = new Clases.VisualizadorArbol();
-        visualizador.mostrar(datos, cantidad);
+if (monticulo.getSize() > 0) {
+        // Usamos tu clase VisualizadorArbol
+        VisualizadorArbol v = new VisualizadorArbol();
+        // Le pasamos tu arreglo 'heap' y tu tamaño 'n'
+        v.mostrar((Clases.RegistroImpresion[]) monticulo.getArreglo(), monticulo.getSize() + 1); 
     } else {
-        javax.swing.JOptionPane.showMessageDialog(this, "No hay nada que graficar, la cola está vacía.");
+        JOptionPane.showMessageDialog(this, "No hay nada para graficar.");
     }
     }//GEN-LAST:event_btnGraficarActionPerformed
+
+    private void btnEliminarUsuarioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarUsuarioActionPerformed
+// 1. Obtenemos el nombre del usuario seleccionado en tu ComboBox
+    String nombre = cbUsuarios.getSelectedItem().toString(); 
+    
+    if (nombre != null && !nombre.isEmpty()) {
+        // Confirmación para evitar borrados accidentales (Usabilidad)
+        int respuesta = JOptionPane.showConfirmDialog(this, 
+            "¿Seguro que deseas eliminar al usuario " + nombre + "?\n" +
+            "Sus documentos en cola de impresión NO serán borrados.", 
+            "Confirmar eliminación", JOptionPane.YES_NO_OPTION);
+        
+        if (respuesta == JOptionPane.YES_OPTION) {
+            // 2. Llamamos al método de la Tabla Hash que ya arreglamos
+            tablaUsuarios.eliminarUsuario(nombre); 
+            
+            // 3. Actualizamos el ComboBox para que el usuario ya no aparezca
+            cbUsuarios.removeItem(nombre);
+            
+            JOptionPane.showMessageDialog(this, "Usuario eliminado exitosamente.");
+        }
+    } else {
+        JOptionPane.showMessageDialog(this, "Por favor, selecciona un usuario de la lista.");
+    }
+    }//GEN-LAST:event_btnEliminarUsuarioActionPerformed
 
     /**
      * @param args the command line arguments
@@ -245,6 +292,7 @@ Clases.RegistroImpresion[] datos = (Clases.RegistroImpresion[]) monticulo.getArr
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCargarCSV;
+    private javax.swing.JButton btnEliminarUsuario;
     private javax.swing.JButton btnEnviar;
     private javax.swing.JButton btnGraficar;
     private javax.swing.JButton btnLiberar;

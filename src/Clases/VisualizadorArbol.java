@@ -14,37 +14,56 @@ public class VisualizadorArbol {
     private Graph graph;
 
     public void mostrar(Clases.RegistroImpresion[] array, int size) {
-        // Configuramos la propiedad para que use la interfaz de Swing
         System.setProperty("org.graphstream.ui", "swing");
-        
-        graph = new SingleGraph("Cola de Prioridad (Montículo)");
-        
-        String styleSheet = 
-            "node { fill-color: #2980b9; size: 40px; text-alignment: center; " +
-            "text-size: 14px; text-color: white; stroke-mode: plain; stroke-color: black; } " +
-            "edge { fill-color: #7f8c8d; width: 2px; }";
-        graph.setAttribute("ui.stylesheet", styleSheet);
+        graph = new SingleGraph("Monticulo Binario");
+    
+    // 1. Configuración de estilo básica
+    graph.setAttribute("ui.stylesheet", 
+        "node { " +
+        "   fill-color: #3498db; " + // Color azul
+        "   size: 45px; " +          // Tamaño del círculo (Súbelo a 45 o 50)
+        "   text-alignment: center; " +
+        "   text-size: 16px; " +
+        "   text-color: white; " +
+        "   stroke-mode: plain; " +
+        "   stroke-color: black; " +
+        "   stroke-width: 2px; " +
+        "} " +
+        "edge { " +
+        "   fill-color: #7f8c8d; " +
+        "   size: 3px; " +           // Grosor de la línea
+        "}");
 
-        // Recorremos el arreglo del montículo
-        for (int i = 0; i < size; i++) {
-            Clases.RegistroImpresion reg = array[i];
-            if (reg != null) {
-                String id = String.valueOf(i);
-                Node n = graph.addNode(id);
-                
-                // Ponemos el nombre del doc y su prioridad en el círculo
-                n.setAttribute("ui.label", reg.getNombreDocumento() + " (" + reg.getEtiqueta() + ")");
-                
-                // Conectamos con el padre (si no es la raíz)
-                if (i > 0) {
-                    int padreIndex = (i - 1) / 2;
-                    graph.addEdge(padreIndex + "-" + i, String.valueOf(padreIndex), id);
-                }
+    // 2. CREAR TODOS LOS NODOS PRIMERO
+    for (int i = 1; i < size; i++) {
+        Clases.RegistroImpresion reg = (Clases.RegistroImpresion) array[i];
+        if (reg != null) {
+            String id = String.valueOf(i);
+            Node n = graph.addNode(id);
+            n.setAttribute("ui.label", reg.getNombreDocumento() + " (" + reg.getEtiqueta() + ")");
+        }
+    }
+
+    // 3. CREAR LAS CONEXIONES (ARISTAS) DESPUÉS
+    for (int i = 2; i < size; i++) { 
+        if (array[i] != null) {
+            int padreIdx = i / 2; // Fórmula matemática del Montículo
+            
+            String hijoId = String.valueOf(i);
+            String padreId = String.valueOf(padreIdx);
+            
+            // Verificamos que ambos nodos existan antes de conectar
+            if (graph.getNode(padreId) != null && graph.getNode(hijoId) != null) {
+                graph.addEdge(padreId + "-" + hijoId, padreId, hijoId);
             }
         }
-
-        // Abrimos la ventana del gráfico
-        Viewer viewer = graph.display();
-        viewer.setCloseFramePolicy(Viewer.CloseFramePolicy.HIDE_ONLY);
     }
+try {
+    Thread.sleep(100); // Una pausa de 100ms para que el motor cargue
+} catch (InterruptedException e) {}
+    // 4. Mostrar el gráfico
+    Viewer viewer = graph.display();
+    viewer.enableAutoLayout(); 
 }
+    }
+   

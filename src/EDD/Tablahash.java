@@ -125,4 +125,24 @@ public class Tablahash {
         }
         return nombres;
     }
+    public boolean eliminar(String nombre) {
+    int i = funcionHash(nombre);
+    int inicio = i;
+    
+    do {
+        if (tabla[i] == null) return false; // Si llegamos a un nulo, no existe
+        Usuario usuarioTemporal = (Usuario) tabla[i].dato;
+        if (usuarioTemporal.getNombre().equals(nombre)) {
+            // "Marcamos" como borrado. 
+            // Para no romper la tabla, lo ideal es poner un objeto 'borrado' 
+            // o simplemente null si tu búsqueda está preparada.
+            tabla[i] = null; 
+            tamano--;
+            return true;
+        }
+        i = (i + 1) % tabla.length;
+    } while (i != inicio);
+    
+    return false;
+}
 }
